@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/widgets/mission_status_badge.dart';
 import '../../shared/widgets/primary_action_button.dart';
+import '../../shared/widgets/status_tile.dart';
 import 'widgets/mission_control_card.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -25,28 +27,103 @@ class HomeScreen extends StatelessWidget {
                     style: theme.textTheme.headlineLarge,
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    'Tuesday, July 21',
-                    style: theme.textTheme.bodyMedium,
-                  ),
+                  Text('Tuesday, July 21', style: theme.textTheme.bodyMedium),
                   const SizedBox(height: 28),
 
                   MissionControlCard(
                     icon: Icons.sports_soccer,
                     title: "Today's Training",
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'High Press & Transition Recovery',
-                          style: theme.textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '6:00 PM',
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      ],
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final useTwoColumns = constraints.maxWidth >= 650;
+
+                        final trainingDetails = Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            MissionStatusBadge(
+                              status: MissionStatus.attentionRequired,
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              'High Press & Transition Recovery',
+                              style: theme.textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.schedule,
+                                  size: 18,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '6:00 PM',
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Preparation is nearly complete.',
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                          ],
+                        );
+
+                        final readinessChecklist = Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Readiness Checklist',
+                              style: theme.textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 14),
+                            const StatusTile(
+                              label: 'Session Generated',
+                              status: StatusType.success,
+                            ),
+                            const SizedBox(height: 10),
+                            const StatusTile(
+                              label: 'Equipment Ready',
+                              status: StatusType.success,
+                            ),
+                            const SizedBox(height: 10),
+                            const StatusTile(
+                              label: '2 Players Unconfirmed',
+                              status: StatusType.warning,
+                            ),
+                          ],
+                        );
+
+                        if (useTwoColumns) {
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(child: trainingDetails),
+                              const SizedBox(width: 32),
+                              Container(
+                                width: 1,
+                                height: 170,
+                                color: theme.colorScheme.outlineVariant,
+                              ),
+                              const SizedBox(width: 32),
+                              Expanded(child: readinessChecklist),
+                            ],
+                          );
+                        }
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            trainingDetails,
+                            const SizedBox(height: 24),
+                            Divider(color: theme.colorScheme.outlineVariant),
+                            const SizedBox(height: 20),
+                            readinessChecklist,
+                          ],
+                        );
+                      },
                     ),
                   ),
 
@@ -68,7 +145,7 @@ class HomeScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              '11 confirmed',
+                              '11 Confirmed',
                               style: theme.textTheme.bodyMedium,
                             ),
                           ],
@@ -81,10 +158,7 @@ class HomeScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              '76°F',
-                              style: theme.textTheme.titleLarge,
-                            ),
+                            Text('76°F', style: theme.textTheme.titleLarge),
                             const SizedBox(height: 8),
                             Text(
                               'Ideal training conditions',

@@ -24,16 +24,9 @@ class MissionControlCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(
-                  icon,
-                  color: theme.colorScheme.primary,
-                  size: 22,
-                ),
+                Icon(icon, color: theme.colorScheme.primary, size: 22),
                 const SizedBox(width: 10),
-                Text(
-                  title,
-                  style: theme.textTheme.titleMedium,
-                ),
+                Text(title, style: theme.textTheme.titleMedium),
               ],
             ),
             const SizedBox(height: 16),
