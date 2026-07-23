@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../features/home/home_screen.dart';
+import '../../features/practice/practice_screen.dart';
 import '../theme/panther_theme.dart';
 
 class PantherApp extends StatelessWidget {
@@ -12,7 +13,15 @@ class PantherApp extends StatelessWidget {
       title: 'PantherOS',
       debugShowCheckedModeBanner: false,
       theme: PantherTheme.dark,
-      home: const HomeScreen(),
+
+      // Initial screen
+      initialRoute: '/',
+
+      // App routes
+      routes: {
+        '/': (context) => const HomeScreen(),
+        '/practice': (context) => const PracticeScreen(),
+      },
     );
   }
 }

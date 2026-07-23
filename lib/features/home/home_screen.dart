@@ -257,13 +257,14 @@ class HomeScreen extends StatelessWidget {
 
                   const SizedBox(height: 32),
 
-                  PrimaryActionButton(
-                    label: 'Begin Practice',
-                    icon: Icons.play_arrow,
-                    onPressed: () {
-                      debugPrint('Begin Practice pressed');
-                    },
-                  ),
+                 PrimaryActionButton(
+  label: 'Begin Practice',
+  icon: Icons.play_arrow,
+  onPressed: () {
+    debugPrint('Begin Practice pressed');
+    Navigator.of(context).pushNamed('/practice');
+  },
+),
                 ],
               ),
             ),
