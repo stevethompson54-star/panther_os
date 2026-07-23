@@ -22,12 +22,73 @@ class HomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.12,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.45,
+                            ),
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.shield_outlined,
+                          color: theme.colorScheme.primary,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'PANTHEROS',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              letterSpacing: 1.8,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'PREPARE • DECIDE • COACH',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  Text(
+                    'MISSION CONTROL',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
                   Text(
                     'Good Morning, Coach',
                     style: theme.textTheme.headlineLarge,
                   ),
+
                   const SizedBox(height: 8),
-                  Text('Tuesday, July 21', style: theme.textTheme.bodyMedium),
+
+                  Text(
+                    'Tuesday • July 21',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+
                   const SizedBox(height: 28),
 
                   MissionControlCard(
@@ -40,7 +101,7 @@ class HomeScreen extends StatelessWidget {
                         final trainingDetails = Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            MissionStatusBadge(
+                            const MissionStatusBadge(
                               status: MissionStatus.attentionRequired,
                             ),
                             const SizedBox(height: 20),
@@ -118,7 +179,9 @@ class HomeScreen extends StatelessWidget {
                           children: [
                             trainingDetails,
                             const SizedBox(height: 24),
-                            Divider(color: theme.colorScheme.outlineVariant),
+                            Divider(
+                              color: theme.colorScheme.outlineVariant,
+                            ),
                             const SizedBox(height: 20),
                             readinessChecklist,
                           ],
@@ -158,7 +221,10 @@ class HomeScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('76°F', style: theme.textTheme.titleLarge),
+                            Text(
+                              '76°F',
+                              style: theme.textTheme.titleLarge,
+                            ),
                             const SizedBox(height: 8),
                             Text(
                               'Ideal training conditions',
