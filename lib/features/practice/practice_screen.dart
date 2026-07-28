@@ -1,57 +1,96 @@
 import 'package:flutter/material.dart';
 
 import '../../design_system/panther_scaffold.dart';
+import 'controllers/practice_controller.dart';
 import 'models/practice_block.dart';
 import 'models/practice_session.dart';
 
-class PracticeScreen extends StatelessWidget {
+class PracticeScreen extends StatefulWidget {
   const PracticeScreen({super.key});
 
   @override
+  State<PracticeScreen> createState() => _PracticeScreenState();
+}
+
+class _PracticeScreenState extends State<PracticeScreen> {
+  late final PracticeController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = PracticeController(
+      session: _createSampleSession(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final session = _createSampleSession();
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final theme = Theme.of(context);
 
-    final currentBlock = session.blocks.first;
-    final nextBlock =
-        session.blocks.length > 1 ? session.blocks[1] : null;
-
-    return PantherScaffold(
-      title: 'PRACTICE MODE',
-      subtitle: 'Run today’s training session from one focused workspace.',
-      showBackButton: true,
-      maxContentWidth: 900,
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSessionHeader(
-            theme: theme,
-            session: session,
+        return PantherScaffold(
+          title: 'PRACTICE MODE',
+          subtitle: 'Run today’s training session from one focused workspace.',
+          showBackButton: true,
+          maxContentWidth: 900,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSessionHeader(
+                theme: theme,
+                controller: _controller,
+              ),
+              const SizedBox(height: 20),
+              _buildProgressCard(
+                theme: theme,
+                controller: _controller,
+              ),
+              const SizedBox(height: 16),
+              if (_controller.isPracticeComplete)
+                _buildPracticeCompleteCard(
+                  theme: theme,
+                  controller: _controller,
+                )
+              else if (_controller.currentBlock != null)
+                _buildCurrentBlockCard(
+                  theme: theme,
+                  controller: _controller,
+                  block: _controller.currentBlock!,
+                ),
+              if (!_controller.isPracticeComplete &&
+                  _controller.nextBlock != null) ...[
+                const SizedBox(height: 16),
+                _buildNextBlockCard(
+                  theme: theme,
+                  block: _controller.nextBlock!,
+                ),
+              ],
+              const SizedBox(height: 16),
+              _buildSessionOverviewCard(
+                theme: theme,
+                session: _controller.session,
+              ),
+              const SizedBox(height: 16),
+              _buildTeamStatusCard(theme),
+              const SizedBox(height: 24),
+              _buildActionButtons(
+                context: context,
+                controller: _controller,
+              ),
+            ],
           ),
-          const SizedBox(height: 20),
-          _buildCurrentBlockCard(
-            theme: theme,
-            block: currentBlock,
-          ),
-          if (nextBlock != null) ...[
-            const SizedBox(height: 16),
-            _buildNextBlockCard(
-              theme: theme,
-              block: nextBlock,
-            ),
-          ],
-          const SizedBox(height: 16),
-          _buildSessionOverviewCard(
-            theme: theme,
-            session: session,
-          ),
-          const SizedBox(height: 16),
-          _buildTeamStatusCard(theme),
-          const SizedBox(height: 24),
-          _buildActionButtons(context),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -162,8 +201,10 @@ class PracticeScreen extends StatelessWidget {
 
   Widget _buildSessionHeader({
     required ThemeData theme,
-    required PracticeSession session,
+    required PracticeController controller,
   }) {
+    final session = controller.session;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -176,38 +217,7 @@ class PracticeScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 7,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(
-                color: Colors.green.withValues(alpha: 0.5),
-              ),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.circle,
-                  size: 10,
-                  color: Colors.green,
-                ),
-                SizedBox(width: 8),
-                Text(
-                  'LIVE',
-                  style: TextStyle(
-                    color: Colors.green,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          _buildStatusBadge(controller),
           const SizedBox(height: 22),
           Text(
             '00:00:00',
@@ -253,8 +263,130 @@ class PracticeScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildStatusBadge(PracticeController controller) {
+    late final String label;
+    late final Color color;
+    late final IconData icon;
+
+    if (controller.isPracticeComplete) {
+      label = 'COMPLETE';
+      color = Colors.blue;
+      icon = Icons.check_circle;
+    } else if (controller.isPracticePaused) {
+      label = 'PAUSED';
+      color = Colors.orange;
+      icon = Icons.pause_circle;
+    } else if (controller.isPracticeStarted) {
+      label = 'LIVE';
+      color = Colors.green;
+      icon = Icons.circle;
+    } else {
+      label = 'READY';
+      color = Colors.grey;
+      icon = Icons.radio_button_checked;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: 7,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: color.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 12,
+            color: color,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressCard({
+    required ThemeData theme,
+    required PracticeController controller,
+  }) {
+    final totalBlocks = controller.session.blockCount;
+    final displayedBlockNumber = controller.isPracticeComplete
+        ? totalBlocks
+        : controller.currentBlockIndex + 1;
+
+    return _DashboardCard(
+      eyebrow: 'PRACTICE PROGRESS',
+      icon: Icons.trending_up,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  controller.isPracticeComplete
+                      ? 'All blocks completed'
+                      : 'Block $displayedBlockNumber of $totalBlocks',
+                  style: theme.textTheme.titleMedium,
+                ),
+              ),
+              Text(
+                '${(controller.progress * 100).round()}%',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          LinearProgressIndicator(
+            value: controller.progress,
+            minHeight: 10,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${controller.completedBlockCount} completed',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              Text(
+                '${controller.remainingBlockCount} remaining',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCurrentBlockCard({
     required ThemeData theme,
+    required PracticeController controller,
     required PracticeBlock block,
   }) {
     return _DashboardCard(
@@ -298,11 +430,15 @@ class PracticeScreen extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: () {
-                debugPrint('Start Block pressed: ${block.title}');
-              },
+              onPressed: controller.isPracticeStarted
+                  ? null
+                  : controller.startPractice,
               icon: const Icon(Icons.play_arrow),
-              label: const Text('START BLOCK'),
+              label: Text(
+                controller.isPracticeStarted
+                    ? 'BLOCK ACTIVE'
+                    : 'START PRACTICE',
+              ),
             ),
           ),
         ],
@@ -351,6 +487,49 @@ class PracticeScreen extends StatelessWidget {
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.bold,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPracticeCompleteCard({
+    required ThemeData theme,
+    required PracticeController controller,
+  }) {
+    return _DashboardCard(
+      eyebrow: 'PRACTICE COMPLETE',
+      icon: Icons.emoji_events_outlined,
+      child: Column(
+        children: [
+          Icon(
+            Icons.check_circle_outline,
+            size: 64,
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Training Session Completed',
+            style: theme.textTheme.headlineSmall,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${controller.session.blockCount} blocks completed across '
+            '${controller.session.totalDurationMinutes} planned minutes.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: controller.restartPractice,
+              icon: const Icon(Icons.restart_alt),
+              label: const Text('RESTART PRACTICE'),
             ),
           ),
         ],
@@ -489,37 +668,66 @@ class PracticeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context) {
+  Widget _buildActionButtons({
+    required BuildContext context,
+    required PracticeController controller,
+  }) {
+    if (controller.isPracticeComplete) {
+      return TextButton.icon(
+        onPressed: () {
+          Navigator.of(context).pop();
+        },
+        icon: const Icon(Icons.arrow_back),
+        label: const Text('RETURN TO MISSION CONTROL'),
+      );
+    }
+
     return Column(
       children: [
         SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
-            onPressed: () {
-              debugPrint('Next Block pressed');
-            },
-            icon: const Icon(Icons.skip_next),
-            label: const Text('NEXT BLOCK'),
+            onPressed: controller.isPracticeStarted
+                ? controller.moveToNextBlock
+                : null,
+            icon: Icon(
+              controller.nextBlock == null
+                  ? Icons.check
+                  : Icons.skip_next,
+            ),
+            label: Text(
+              controller.nextBlock == null
+                  ? 'COMPLETE PRACTICE'
+                  : 'NEXT BLOCK',
+            ),
           ),
         ),
         const SizedBox(height: 12),
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
-            onPressed: () {
-              debugPrint('Pause Practice pressed');
-            },
-            icon: const Icon(Icons.pause),
-            label: const Text('PAUSE PRACTICE'),
+            onPressed: controller.isPracticeStarted
+                ? controller.togglePause
+                : null,
+            icon: Icon(
+              controller.isPracticePaused
+                  ? Icons.play_arrow
+                  : Icons.pause,
+            ),
+            label: Text(
+              controller.isPracticePaused
+                  ? 'RESUME PRACTICE'
+                  : 'PAUSE PRACTICE',
+            ),
           ),
         ),
         const SizedBox(height: 12),
         SizedBox(
           width: double.infinity,
           child: TextButton.icon(
-            onPressed: () {
-              debugPrint('End Practice pressed');
-            },
+            onPressed: controller.isPracticeStarted
+                ? controller.completePractice
+                : null,
             icon: const Icon(Icons.stop_circle_outlined),
             label: const Text('END PRACTICE'),
           ),

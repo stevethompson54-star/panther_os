@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_initializing_formals
+
 import 'package:flutter/foundation.dart';
 
 import '../models/practice_block.dart';
@@ -8,7 +10,6 @@ class PracticeController extends ChangeNotifier {
     required PracticeSession session,
   }) : _session = session;
 
-  // ignore: prefer_initializing_formals
   final PracticeSession _session;
 
   int _currentBlockIndex = 0;
