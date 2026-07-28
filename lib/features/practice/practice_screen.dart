@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../design_system/panther_scaffold.dart';
+import 'models/practice_block.dart';
+import 'models/practice_session.dart';
 
 class PracticeScreen extends StatelessWidget {
   const PracticeScreen({super.key});
@@ -8,6 +10,11 @@ class PracticeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final session = _createSampleSession();
+
+    final currentBlock = session.blocks.first;
+    final nextBlock =
+        session.blocks.length > 1 ? session.blocks[1] : null;
 
     return PantherScaffold(
       title: 'PRACTICE MODE',
@@ -18,11 +25,27 @@ class PracticeScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSessionHeader(theme),
+          _buildSessionHeader(
+            theme: theme,
+            session: session,
+          ),
           const SizedBox(height: 20),
-          _buildCurrentBlockCard(theme),
+          _buildCurrentBlockCard(
+            theme: theme,
+            block: currentBlock,
+          ),
+          if (nextBlock != null) ...[
+            const SizedBox(height: 16),
+            _buildNextBlockCard(
+              theme: theme,
+              block: nextBlock,
+            ),
+          ],
           const SizedBox(height: 16),
-          _buildNextBlockCard(theme),
+          _buildSessionOverviewCard(
+            theme: theme,
+            session: session,
+          ),
           const SizedBox(height: 16),
           _buildTeamStatusCard(theme),
           const SizedBox(height: 24),
@@ -32,7 +55,115 @@ class PracticeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSessionHeader(ThemeData theme) {
+  PracticeSession _createSampleSession() {
+    return PracticeSession(
+      title: 'High Press & Transition Recovery',
+      date: DateTime(2026, 7, 28, 18),
+      location: 'Griffith High School',
+      notes: 'Emphasize communication, compactness, and immediate reactions.',
+      blocks: const [
+        PracticeBlock(
+          title: 'Dynamic Warm-Up + Rondo',
+          category: 'Activation',
+          durationMinutes: 12,
+          description:
+              'Prepare the players physically and mentally before introducing '
+              'the main tactical theme. Begin with dynamic movement before '
+              'moving directly into a high-tempo possession rondo.',
+          coachingPoints: [
+            'Increase movement intensity gradually.',
+            'Use an open body shape when receiving.',
+            'Communicate before the ball arrives.',
+            'React immediately after losing possession.',
+          ],
+          equipment: [
+            'Soccer balls',
+            'Cones',
+            'Pinnies',
+          ],
+        ),
+        PracticeBlock(
+          title: 'Passing Patterns',
+          category: 'Technical Development',
+          durationMinutes: 15,
+          description:
+              'Develop clean passing, supporting movement, and forward-facing '
+              'receiving actions that prepare the team to play through pressure.',
+          coachingPoints: [
+            'Pass with appropriate pace.',
+            'Move immediately after releasing the ball.',
+            'Check the shoulder before receiving.',
+            'Receive across the body whenever possible.',
+          ],
+          equipment: [
+            'Soccer balls',
+            'Cones',
+          ],
+        ),
+        PracticeBlock(
+          title: 'High-Press Trigger Game',
+          category: 'Tactical Development',
+          durationMinutes: 25,
+          description:
+              'Train the front line and midfield to recognize pressing triggers, '
+              'close space together, and prevent the opponent from playing out.',
+          coachingPoints: [
+            'The first defender sets the direction of the press.',
+            'Supporting players close nearby passing lanes.',
+            'Keep the team compact behind the press.',
+            'Attack immediately after regaining possession.',
+          ],
+          equipment: [
+            'Soccer balls',
+            'Cones',
+            'Pinnies',
+            'Goals',
+          ],
+        ),
+        PracticeBlock(
+          title: 'Conditioned Match',
+          category: 'Competitive Application',
+          durationMinutes: 30,
+          description:
+              'Apply the session theme in a realistic match environment with '
+              'bonus rewards for regaining possession in advanced areas.',
+          coachingPoints: [
+            'Recognize when to press and when to recover.',
+            'Communicate between all three lines.',
+            'Transition forward quickly after a regain.',
+            'Maintain team shape when the press is broken.',
+          ],
+          equipment: [
+            'Soccer balls',
+            'Pinnies',
+            'Goals',
+          ],
+        ),
+        PracticeBlock(
+          title: 'Recovery + Panther Reflection',
+          category: 'Cooldown',
+          durationMinutes: 8,
+          description:
+              'Lower the players’ heart rates, restore mobility, and finish with '
+              'a brief team reflection on the session objectives.',
+          coachingPoints: [
+            'Use controlled breathing during recovery.',
+            'Complete each mobility movement deliberately.',
+            'Identify one thing the team performed well.',
+            'Identify one thing the team must improve.',
+          ],
+          equipment: [
+            'Soccer balls',
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSessionHeader({
+    required ThemeData theme,
+    required PracticeSession session,
+  }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -95,22 +226,37 @@ class PracticeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 22),
           Text(
-            'High Press & Transition Recovery',
+            session.title,
             style: theme.textTheme.titleLarge,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 6),
           Text(
-            'Tuesday • 6:00 PM • 90 Minutes',
+            '${_formatDate(session.date)} • '
+            '${_formatTime(session.date)} • '
+            '${session.totalDurationMinutes} Minutes',
             style: theme.textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
+          if (session.location.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              session.location,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildCurrentBlockCard(ThemeData theme) {
+  Widget _buildCurrentBlockCard({
+    required ThemeData theme,
+    required PracticeBlock block,
+  }) {
     return _DashboardCard(
       eyebrow: 'CURRENT BLOCK',
       icon: Icons.play_circle_outline,
@@ -118,34 +264,42 @@ class PracticeScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Activation',
+            block.category,
             style: theme.textTheme.headlineSmall,
           ),
           const SizedBox(height: 6),
           Text(
-            'Dynamic Warm-Up + Rondo',
+            block.title,
             style: theme.textTheme.titleMedium?.copyWith(
               color: theme.colorScheme.primary,
             ),
           ),
+          const SizedBox(height: 12),
+          Text(
+            block.description,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.4,
+            ),
+          ),
           const SizedBox(height: 18),
-          const _InformationRow(
+          _InformationRow(
             icon: Icons.schedule,
             label: 'Block Duration',
-            value: '12 Minutes',
+            value: '${block.durationMinutes} Minutes',
           ),
           const SizedBox(height: 12),
-          const _InformationRow(
+          _InformationRow(
             icon: Icons.timer_outlined,
             label: 'Time Remaining',
-            value: '12:00',
+            value: _formatDuration(block.durationMinutes),
           ),
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
               onPressed: () {
-                debugPrint('Start Block pressed');
+                debugPrint('Start Block pressed: ${block.title}');
               },
               icon: const Icon(Icons.play_arrow),
               label: const Text('START BLOCK'),
@@ -156,7 +310,10 @@ class PracticeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNextBlockCard(ThemeData theme) {
+  Widget _buildNextBlockCard({
+    required ThemeData theme,
+    required PracticeBlock block,
+  }) {
     return _DashboardCard(
       eyebrow: 'NEXT BLOCK',
       icon: Icons.skip_next_outlined,
@@ -167,12 +324,12 @@ class PracticeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Passing Patterns',
+                  block.title,
                   style: theme.textTheme.titleLarge,
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Technical Development',
+                  block.category,
                   style: theme.textTheme.bodyMedium,
                 ),
               ],
@@ -189,13 +346,69 @@ class PracticeScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              '15 MIN',
+              '${block.durationMinutes} MIN',
               style: theme.textTheme.labelLarge?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSessionOverviewCard({
+    required ThemeData theme,
+    required PracticeSession session,
+  }) {
+    return _DashboardCard(
+      eyebrow: 'SESSION OVERVIEW',
+      icon: Icons.assignment_outlined,
+      child: Column(
+        children: [
+          _InformationRow(
+            icon: Icons.view_agenda_outlined,
+            label: 'Training Blocks',
+            value: '${session.blockCount}',
+          ),
+          const SizedBox(height: 14),
+          _InformationRow(
+            icon: Icons.schedule_outlined,
+            label: 'Total Duration',
+            value: '${session.totalDurationMinutes} Minutes',
+          ),
+          const SizedBox(height: 14),
+          _InformationRow(
+            icon: Icons.location_on_outlined,
+            label: 'Location',
+            value: session.location.isEmpty ? 'Not Set' : session.location,
+          ),
+          if (session.notes.isNotEmpty) ...[
+            const SizedBox(height: 18),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'SESSION NOTES',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.primary,
+                  letterSpacing: 1,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                session.notes,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -322,6 +535,49 @@ class PracticeScreen extends StatelessWidget {
       ],
     );
   }
+
+  String _formatDate(DateTime date) {
+    const weekdays = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+
+    return '${weekdays[date.weekday - 1]}, '
+        '${months[date.month - 1]} ${date.day}';
+  }
+
+  String _formatTime(DateTime date) {
+    final hour = date.hour % 12 == 0 ? 12 : date.hour % 12;
+    final minute = date.minute.toString().padLeft(2, '0');
+    final period = date.hour >= 12 ? 'PM' : 'AM';
+
+    return '$hour:$minute $period';
+  }
+
+  String _formatDuration(int durationMinutes) {
+    final minutes = durationMinutes.toString().padLeft(2, '0');
+    return '$minutes:00';
+  }
 }
 
 class _DashboardCard extends StatelessWidget {
@@ -408,10 +664,13 @@ class _InformationRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Text(
-          value,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
       ],
