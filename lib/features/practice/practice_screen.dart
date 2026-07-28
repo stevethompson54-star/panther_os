@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../design_system/panther_scaffold.dart';
+
 class PracticeScreen extends StatelessWidget {
   const PracticeScreen({super.key});
 
@@ -7,33 +9,25 @@ class PracticeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('PRACTICE MODE'),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 900),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSessionHeader(theme),
-                  const SizedBox(height: 20),
-                  _buildCurrentBlockCard(theme),
-                  const SizedBox(height: 16),
-                  _buildNextBlockCard(theme),
-                  const SizedBox(height: 16),
-                  _buildTeamStatusCard(theme),
-                  const SizedBox(height: 24),
-                  _buildActionButtons(context),
-                ],
-              ),
-            ),
-          ),
-        ),
+    return PantherScaffold(
+      title: 'PRACTICE MODE',
+      subtitle: 'Run today’s training session from one focused workspace.',
+      showBackButton: true,
+      maxContentWidth: 900,
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSessionHeader(theme),
+          const SizedBox(height: 20),
+          _buildCurrentBlockCard(theme),
+          const SizedBox(height: 16),
+          _buildNextBlockCard(theme),
+          const SizedBox(height: 16),
+          _buildTeamStatusCard(theme),
+          const SizedBox(height: 24),
+          _buildActionButtons(context),
+        ],
       ),
     );
   }
@@ -215,8 +209,8 @@ class PracticeScreen extends StatelessWidget {
         builder: (context, constraints) {
           final useTwoColumns = constraints.maxWidth >= 620;
 
-          final leftColumn = Column(
-            children: const [
+          const leftColumn = Column(
+            children: [
               _InformationRow(
                 icon: Icons.people_outline,
                 label: 'Players Present',
@@ -237,8 +231,8 @@ class PracticeScreen extends StatelessWidget {
             ],
           );
 
-          final rightColumn = Column(
-            children: const [
+          const rightColumn = Column(
+            children: [
               _InformationRow(
                 icon: Icons.sports_outlined,
                 label: 'Goals',
@@ -260,20 +254,20 @@ class PracticeScreen extends StatelessWidget {
           );
 
           if (useTwoColumns) {
-            return Row(
+            return const Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(child: leftColumn),
-                const SizedBox(width: 32),
+                SizedBox(width: 32),
                 Expanded(child: rightColumn),
               ],
             );
           }
 
-          return Column(
+          return const Column(
             children: [
               leftColumn,
-              const SizedBox(height: 14),
+              SizedBox(height: 14),
               rightColumn,
             ],
           );
