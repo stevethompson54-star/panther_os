@@ -330,16 +330,36 @@ class PracticeController extends ChangeNotifier {
   }
 
   void _resetCurrentBlockTimer() {
-    final block = currentBlock;
+  final block = currentBlock;
 
-    _blockTimeRemaining = Duration(
-      minutes: block?.durationMinutes ?? 0,
-    );
+  _blockTimeRemaining = Duration(
+    minutes: block?.durationMinutes ?? 0,
+  );
+}
+
+void addThirtySeconds() {
+  if (!hasBlocks || _isPracticeComplete) {
+    return;
   }
 
-  @override
-  void dispose() {
-    _stopTimer();
-    super.dispose();
+  _blockTimeRemaining += const Duration(seconds: 30);
+
+  notifyListeners();
+}
+void restartCurrentBlock() {
+  if (!hasBlocks || _isPracticeComplete) {
+    return;
   }
+
+  _blockTimeRemaining = Duration(
+    minutes: currentBlock?.durationMinutes ?? 0,
+  );
+
+  notifyListeners();
+}
+@override
+void dispose() {
+  _stopTimer();
+  super.dispose();
+}
 }

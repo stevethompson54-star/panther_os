@@ -96,11 +96,15 @@ class _CoachModeScreenState extends State<CoachModeScreen> {
                               ),
                   ),
                   if (!_controller.isPracticeComplete) ...[
-                    const SizedBox(height: 14),
-                    _CoachControls(
-                      controller: _controller,
-                    ),
-                  ],
+  const SizedBox(height: 14),
+  _CoachControls(
+    controller: _controller,
+  ),
+  const SizedBox(height: 16),
+  _QuickActions(
+    controller: _controller,
+  ),
+],
                 ],
               ),
             ),
@@ -711,7 +715,80 @@ class _CoachControls extends StatelessWidget {
     );
   }
 }
+class _QuickActions extends StatelessWidget {
+  const _QuickActions({
+    required this.controller,
+  });
 
+  final PracticeController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.bolt_outlined,
+                size: 20,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'COACH TOOLS',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+  spacing: 12,
+  runSpacing: 12,
+  children: [
+    ActionChip(
+      avatar: const Icon(Icons.add, size: 18),
+      label: const Text('+30 SEC'),
+      onPressed: controller.addThirtySeconds,
+    ),
+    const ActionChip(
+      avatar: Icon(Icons.remove, size: 18),
+      label: Text('-30 SEC'),
+      onPressed: null,
+    ),
+    ActionChip(
+      avatar: const Icon(Icons.restart_alt, size: 18),
+      label: const Text('RESTART BLOCK'),
+      onPressed: controller.restartCurrentBlock,
+    ),
+    ActionChip(
+  avatar: const Icon(Icons.check_circle_outline, size: 18),
+  label: const Text('COMPLETE BLOCK'),
+  onPressed: controller.moveToNextBlock,
+),
+  ],
+),
+        ],
+      ),
+    );
+  }
+}
 class _PracticeCompleteView extends StatelessWidget {
   const _PracticeCompleteView({
     required this.controller,
