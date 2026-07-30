@@ -95,13 +95,44 @@ Future<void> showPracticeNotesSheet({
             : hour;
 
     return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: const Icon(Icons.circle, size: 8),
-      title: Text(note.text),
-      subtitle: Text(
-        '$displayHour:$minute $period',
-      ),
-    );
+  contentPadding: EdgeInsets.zero,
+  leading: const Icon(Icons.circle, size: 8),
+  title: Text(note.text),
+  subtitle: Text(
+    '$displayHour:$minute $period',
+  ),
+  trailing: IconButton(
+    tooltip: 'Delete note',
+    icon: const Icon(Icons.delete_outline),
+    onPressed: () async {
+      final shouldDelete = await showDialog<bool>(
+        context: sheetContext,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Delete Note'),
+            content: const Text(
+              'Are you sure you want to delete this practice note?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Delete'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (shouldDelete == true) {
+        controller.deletePracticeNote(note);
+      }
+    },
+  ),
+);
   },
 ),
                 const SizedBox(height: 16),

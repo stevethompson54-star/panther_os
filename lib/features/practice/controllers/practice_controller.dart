@@ -49,6 +49,15 @@ List<PracticeNote> get practiceNotes =>
 
 int get practiceNoteCount => _practiceNotes.length;
 
+
+  void deletePracticeNote(PracticeNote note) {
+    final wasRemoved = _practiceNotes.remove(note);
+
+    if (wasRemoved) {
+      notifyListeners();
+    }
+  }
+
   void addPracticeNote(String note) {
     final cleanedNote = note.trim();
 
