@@ -1,3 +1,5 @@
+import 'widgets/practice_notes_sheet.dart';
+
 import 'package:flutter/material.dart';
 
 import 'controllers/practice_controller.dart';
@@ -759,36 +761,91 @@ class _QuickActions extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Wrap(
-  spacing: 12,
-  runSpacing: 12,
-  children: [
-    ActionChip(
-      avatar: const Icon(Icons.add, size: 18),
-      label: const Text('+30 SEC'),
-      onPressed: controller.addThirtySeconds,
-    ),
-    const ActionChip(
-      avatar: Icon(Icons.remove, size: 18),
-      label: Text('-30 SEC'),
-      onPressed: null,
-    ),
-    ActionChip(
-      avatar: const Icon(Icons.restart_alt, size: 18),
-      label: const Text('RESTART BLOCK'),
-      onPressed: controller.restartCurrentBlock,
-    ),
-    ActionChip(
-  avatar: const Icon(Icons.check_circle_outline, size: 18),
-  label: const Text('COMPLETE BLOCK'),
-  onPressed: controller.moveToNextBlock,
-),
-  ],
-),
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              ActionChip(
+                avatar: const Icon(Icons.add, size: 18),
+                label: const Text('+30 SEC'),
+                onPressed: controller.addThirtySeconds,
+              ),
+              const ActionChip(
+                avatar: Icon(Icons.remove, size: 18),
+                label: Text('-30 SEC'),
+                onPressed: null,
+              ),
+              ActionChip(
+                avatar: const Icon(Icons.restart_alt, size: 18),
+                label: const Text('RESTART BLOCK'),
+                onPressed: controller.restartCurrentBlock,
+              ),
+              ActionChip(
+                avatar: const Icon(
+                  Icons.check_circle_outline,
+                  size: 18,
+                ),
+                label: const Text('COMPLETE BLOCK'),
+                onPressed: controller.moveToNextBlock,
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Divider(
+            color: theme.colorScheme.outlineVariant,
+            height: 1,
+          ),
+          const SizedBox(height: 8),
+          InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+  showPracticeNotesSheet(
+    context: context,
+    controller: controller,
+  );
+},
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 4,
+                vertical: 10,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.note_alt_outlined,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'PRACTICE NOTES',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${controller.practiceNoteCount}',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Icon(
+                    Icons.chevron_right,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 }
+
 class _PracticeCompleteView extends StatelessWidget {
   const _PracticeCompleteView({
     required this.controller,

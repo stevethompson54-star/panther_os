@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../models/practice_note.dart';
 
 import 'package:flutter/foundation.dart';
 
@@ -17,7 +18,7 @@ class PracticeController extends ChangeNotifier {
   final PracticeSession session;
 
   Timer? _timer;
-
+final List<PracticeNote> _practiceNotes = [];
   int _currentBlockIndex = 0;
 
   Duration _sessionElapsed = Duration.zero;
@@ -42,6 +43,28 @@ class PracticeController extends ChangeNotifier {
   bool get isTimerRunning => _timer?.isActive ?? false;
 
   bool get hasBlocks => session.blocks.isNotEmpty;
+
+List<PracticeNote> get practiceNotes =>
+    List.unmodifiable(_practiceNotes);
+
+int get practiceNoteCount => _practiceNotes.length;
+
+  void addPracticeNote(String note) {
+    final cleanedNote = note.trim();
+
+    if (cleanedNote.isEmpty) {
+      return;
+    }
+
+    _practiceNotes.add(
+      PracticeNote(
+        text: cleanedNote,
+        createdAt: DateTime.now(),
+      ),
+    );
+
+    notifyListeners();
+  }
 
   PracticeBlock? get currentBlock {
     if (!hasBlocks || _isPracticeComplete) {
