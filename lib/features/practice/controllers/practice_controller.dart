@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_initializing_formals
+import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
@@ -7,19 +7,31 @@ import '../models/practice_session.dart';
 
 class PracticeController extends ChangeNotifier {
   PracticeController({
-    required PracticeSession session,
-  }) : _session = session;
+    required this.session,
+  }) : _blockTimeRemaining = Duration(
+          minutes: session.blocks.isEmpty
+              ? 0
+              : session.blocks.first.durationMinutes,
+        );
 
-  final PracticeSession _session;
+  final PracticeSession session;
+
+  Timer? _timer;
 
   int _currentBlockIndex = 0;
+
+  Duration _sessionElapsed = Duration.zero;
+  Duration _blockTimeRemaining;
+
   bool _isPracticeStarted = false;
   bool _isPracticePaused = false;
   bool _isPracticeComplete = false;
 
-  PracticeSession get session => _session;
-
   int get currentBlockIndex => _currentBlockIndex;
+
+  Duration get sessionElapsed => _sessionElapsed;
+
+  Duration get blockTimeRemaining => _blockTimeRemaining;
 
   bool get isPracticeStarted => _isPracticeStarted;
 
@@ -27,14 +39,16 @@ class PracticeController extends ChangeNotifier {
 
   bool get isPracticeComplete => _isPracticeComplete;
 
-  bool get hasBlocks => _session.blocks.isNotEmpty;
+  bool get isTimerRunning => _timer?.isActive ?? false;
+
+  bool get hasBlocks => session.blocks.isNotEmpty;
 
   PracticeBlock? get currentBlock {
     if (!hasBlocks || _isPracticeComplete) {
       return null;
     }
 
-    return _session.blocks[_currentBlockIndex];
+    return session.blocks[_currentBlockIndex];
   }
 
   PracticeBlock? get previousBlock {
@@ -42,7 +56,7 @@ class PracticeController extends ChangeNotifier {
       return null;
     }
 
-    return _session.blocks[_currentBlockIndex - 1];
+    return session.blocks[_currentBlockIndex - 1];
   }
 
   PracticeBlock? get nextBlock {
@@ -52,16 +66,16 @@ class PracticeController extends ChangeNotifier {
 
     final nextIndex = _currentBlockIndex + 1;
 
-    if (nextIndex >= _session.blocks.length) {
+    if (nextIndex >= session.blocks.length) {
       return null;
     }
 
-    return _session.blocks[nextIndex];
+    return session.blocks[nextIndex];
   }
 
   int get completedBlockCount {
     if (_isPracticeComplete) {
-      return _session.blockCount;
+      return session.blockCount;
     }
 
     return _currentBlockIndex;
@@ -72,11 +86,11 @@ class PracticeController extends ChangeNotifier {
       return 0;
     }
 
-    return _session.blockCount - _currentBlockIndex;
+    return session.blockCount - _currentBlockIndex;
   }
 
   double get progress {
-    if (!hasBlocks) {
+    if (!hasBlocks || session.totalDurationMinutes <= 0) {
       return 0;
     }
 
@@ -84,18 +98,64 @@ class PracticeController extends ChangeNotifier {
       return 1;
     }
 
-    return _currentBlockIndex / _session.blockCount;
+    var completedSeconds = 0;
+
+    for (var index = 0; index < _currentBlockIndex; index++) {
+      completedSeconds +=
+          session.blocks[index].durationMinutes * 60;
+    }
+
+    final activeBlock = currentBlock;
+
+    if (activeBlock != null) {
+      final activeBlockTotalSeconds =
+          activeBlock.durationMinutes * 60;
+
+      final activeBlockElapsedSeconds =
+          activeBlockTotalSeconds -
+          _blockTimeRemaining.inSeconds;
+
+      completedSeconds += activeBlockElapsedSeconds.clamp(
+        0,
+        activeBlockTotalSeconds,
+      );
+    }
+
+    final totalSessionSeconds =
+        session.totalDurationMinutes * 60;
+
+    return (completedSeconds / totalSessionSeconds)
+        .clamp(0.0, 1.0)
+        .toDouble();
+  }
+
+  double get currentBlockProgress {
+    final block = currentBlock;
+
+    if (block == null || block.durationMinutes <= 0) {
+      return 0;
+    }
+
+    final totalSeconds = block.durationMinutes * 60;
+    final remainingSeconds = _blockTimeRemaining.inSeconds;
+    final elapsedSeconds = totalSeconds - remainingSeconds;
+
+    return (elapsedSeconds / totalSeconds)
+        .clamp(0.0, 1.0)
+        .toDouble();
   }
 
   bool get canMoveToPreviousBlock =>
-      hasBlocks && !_isPracticeComplete && _currentBlockIndex > 0;
+      hasBlocks &&
+      !_isPracticeComplete &&
+      _currentBlockIndex > 0;
 
   bool get canMoveToNextBlock =>
       hasBlocks &&
       !_isPracticeComplete &&
-      _currentBlockIndex < _session.blocks.length - 1;
+      _currentBlockIndex < session.blocks.length - 1;
 
-  void startPractice() {
+  void beginPractice() {
     if (!hasBlocks || _isPracticeComplete) {
       return;
     }
@@ -103,15 +163,24 @@ class PracticeController extends ChangeNotifier {
     _isPracticeStarted = true;
     _isPracticePaused = false;
 
+    _startTimer();
+
     notifyListeners();
   }
 
+  void startPractice() {
+    beginPractice();
+  }
+
   void pausePractice() {
-    if (!_isPracticeStarted || _isPracticeComplete) {
+    if (!_isPracticeStarted ||
+        _isPracticePaused ||
+        _isPracticeComplete) {
       return;
     }
 
     _isPracticePaused = true;
+    _stopTimer();
 
     notifyListeners();
   }
@@ -124,6 +193,7 @@ class PracticeController extends ChangeNotifier {
     }
 
     _isPracticePaused = false;
+    _startTimer();
 
     notifyListeners();
   }
@@ -133,9 +203,11 @@ class PracticeController extends ChangeNotifier {
       return;
     }
 
-    _isPracticePaused = !_isPracticePaused;
-
-    notifyListeners();
+    if (_isPracticePaused) {
+      resumePractice();
+    } else {
+      pausePractice();
+    }
   }
 
   void moveToNextBlock() {
@@ -144,7 +216,7 @@ class PracticeController extends ChangeNotifier {
     }
 
     final isLastBlock =
-        _currentBlockIndex == _session.blocks.length - 1;
+        _currentBlockIndex == session.blocks.length - 1;
 
     if (isLastBlock) {
       completePractice();
@@ -154,6 +226,9 @@ class PracticeController extends ChangeNotifier {
     _currentBlockIndex++;
     _isPracticeStarted = true;
     _isPracticePaused = false;
+
+    _resetCurrentBlockTimer();
+    _startTimer();
 
     notifyListeners();
   }
@@ -166,13 +241,19 @@ class PracticeController extends ChangeNotifier {
     _currentBlockIndex--;
     _isPracticePaused = false;
 
+    _resetCurrentBlockTimer();
+
+    if (_isPracticeStarted) {
+      _startTimer();
+    }
+
     notifyListeners();
   }
 
   void jumpToBlock(int index) {
     if (!hasBlocks ||
         index < 0 ||
-        index >= _session.blocks.length) {
+        index >= session.blocks.length) {
       return;
     }
 
@@ -180,6 +261,9 @@ class PracticeController extends ChangeNotifier {
     _isPracticeComplete = false;
     _isPracticeStarted = true;
     _isPracticePaused = false;
+
+    _resetCurrentBlockTimer();
+    _startTimer();
 
     notifyListeners();
   }
@@ -189,19 +273,73 @@ class PracticeController extends ChangeNotifier {
       return;
     }
 
+    _stopTimer();
+
     _isPracticeComplete = true;
     _isPracticeStarted = false;
     _isPracticePaused = false;
+    _blockTimeRemaining = Duration.zero;
 
     notifyListeners();
   }
 
   void restartPractice() {
+    _stopTimer();
+
     _currentBlockIndex = 0;
+    _sessionElapsed = Duration.zero;
     _isPracticeStarted = false;
     _isPracticePaused = false;
     _isPracticeComplete = false;
 
+    _resetCurrentBlockTimer();
+
     notifyListeners();
+  }
+
+  void _startTimer() {
+    if (_timer?.isActive ?? false) {
+      return;
+    }
+
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _handleTimerTick(),
+    );
+  }
+
+  void _stopTimer() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
+  void _handleTimerTick() {
+    if (!_isPracticeStarted ||
+        _isPracticePaused ||
+        _isPracticeComplete) {
+      return;
+    }
+
+    _sessionElapsed += const Duration(seconds: 1);
+
+    if (_blockTimeRemaining.inSeconds > 0) {
+      _blockTimeRemaining -= const Duration(seconds: 1);
+    }
+
+    notifyListeners();
+  }
+
+  void _resetCurrentBlockTimer() {
+    final block = currentBlock;
+
+    _blockTimeRemaining = Duration(
+      minutes: block?.durationMinutes ?? 0,
+    );
+  }
+
+  @override
+  void dispose() {
+    _stopTimer();
+    super.dispose();
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../design_system/panther_scaffold.dart';
+import 'coach_mode_screen.dart';
 import 'controllers/practice_controller.dart';
 import 'models/practice_block.dart';
 import 'models/practice_session.dart';
@@ -18,10 +19,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   @override
   void initState() {
     super.initState();
-
-    _controller = PracticeController(
-      session: _createSampleSession(),
-    );
+    _controller = PracticeController(session: _createSampleSession());
   }
 
   @override
@@ -39,54 +37,36 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
         return PantherScaffold(
           title: 'PRACTICE MODE',
-          subtitle: 'Run today’s training session from one focused workspace.',
+          subtitle: 'Run today’s session from one focused coaching workspace.',
           showBackButton: true,
-          maxContentWidth: 900,
+          maxContentWidth: 960,
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSessionHeader(
-                theme: theme,
-                controller: _controller,
-              ),
-              const SizedBox(height: 20),
-              _buildProgressCard(
-                theme: theme,
-                controller: _controller,
-              ),
+              _buildCompactSessionHeader(theme, _controller),
+              const SizedBox(height: 16),
+              _buildDualProgressCard(theme, _controller),
               const SizedBox(height: 16),
               if (_controller.isPracticeComplete)
-                _buildPracticeCompleteCard(
-                  theme: theme,
-                  controller: _controller,
-                )
+                _buildPracticeCompleteCard(theme, _controller)
               else if (_controller.currentBlock != null)
-                _buildCurrentBlockCard(
-                  theme: theme,
-                  controller: _controller,
-                  block: _controller.currentBlock!,
+                _buildCurrentBlockMissionControl(
+                  theme,
+                  _controller,
+                  _controller.currentBlock!,
                 ),
               if (!_controller.isPracticeComplete &&
                   _controller.nextBlock != null) ...[
                 const SizedBox(height: 16),
-                _buildNextBlockCard(
-                  theme: theme,
-                  block: _controller.nextBlock!,
-                ),
+                _buildNextBlockCard(theme, _controller.nextBlock!),
               ],
               const SizedBox(height: 16),
-              _buildSessionOverviewCard(
-                theme: theme,
-                session: _controller.session,
-              ),
+              _buildSessionOverviewCard(theme, _controller.session),
               const SizedBox(height: 16),
               _buildTeamStatusCard(theme),
-              const SizedBox(height: 24),
-              _buildActionButtons(
-                context: context,
-                controller: _controller,
-              ),
+              const SizedBox(height: 22),
+              _buildActionButtons(context, _controller),
             ],
           ),
         );
@@ -106,159 +86,170 @@ class _PracticeScreenState extends State<PracticeScreen> {
           category: 'Activation',
           durationMinutes: 12,
           description:
-              'Prepare the players physically and mentally before introducing '
-              'the main tactical theme. Begin with dynamic movement before '
-              'moving directly into a high-tempo possession rondo.',
+              'Prepare the players physically and mentally before introducing the main tactical theme. Begin with dynamic movement before moving directly into a high-tempo possession rondo.',
           coachingPoints: [
             'Increase movement intensity gradually.',
             'Use an open body shape when receiving.',
             'Communicate before the ball arrives.',
             'React immediately after losing possession.',
           ],
-          equipment: [
-            'Soccer balls',
-            'Cones',
-            'Pinnies',
-          ],
+          equipment: ['Soccer balls', 'Cones', 'Pinnies'],
         ),
         PracticeBlock(
           title: 'Passing Patterns',
           category: 'Technical Development',
           durationMinutes: 15,
           description:
-              'Develop clean passing, supporting movement, and forward-facing '
-              'receiving actions that prepare the team to play through pressure.',
+              'Develop clean passing, supporting movement, and forward-facing receiving actions that prepare the team to play through pressure.',
           coachingPoints: [
             'Pass with appropriate pace.',
             'Move immediately after releasing the ball.',
             'Check the shoulder before receiving.',
             'Receive across the body whenever possible.',
           ],
-          equipment: [
-            'Soccer balls',
-            'Cones',
-          ],
+          equipment: ['Soccer balls', 'Cones'],
         ),
         PracticeBlock(
           title: 'High-Press Trigger Game',
           category: 'Tactical Development',
           durationMinutes: 25,
           description:
-              'Train the front line and midfield to recognize pressing triggers, '
-              'close space together, and prevent the opponent from playing out.',
+              'Train the front line and midfield to recognize pressing triggers, close space together, and prevent the opponent from playing out.',
           coachingPoints: [
             'The first defender sets the direction of the press.',
             'Supporting players close nearby passing lanes.',
             'Keep the team compact behind the press.',
             'Attack immediately after regaining possession.',
           ],
-          equipment: [
-            'Soccer balls',
-            'Cones',
-            'Pinnies',
-            'Goals',
-          ],
+          equipment: ['Soccer balls', 'Cones', 'Pinnies', 'Goals'],
         ),
         PracticeBlock(
           title: 'Conditioned Match',
           category: 'Competitive Application',
           durationMinutes: 30,
           description:
-              'Apply the session theme in a realistic match environment with '
-              'bonus rewards for regaining possession in advanced areas.',
+              'Apply the session theme in a realistic match environment with bonus rewards for regaining possession in advanced areas.',
           coachingPoints: [
             'Recognize when to press and when to recover.',
             'Communicate between all three lines.',
             'Transition forward quickly after a regain.',
             'Maintain team shape when the press is broken.',
           ],
-          equipment: [
-            'Soccer balls',
-            'Pinnies',
-            'Goals',
-          ],
+          equipment: ['Soccer balls', 'Pinnies', 'Goals'],
         ),
         PracticeBlock(
           title: 'Recovery + Panther Reflection',
           category: 'Cooldown',
           durationMinutes: 8,
           description:
-              'Lower the players’ heart rates, restore mobility, and finish with '
-              'a brief team reflection on the session objectives.',
+              'Lower the players’ heart rates, restore mobility, and finish with a brief team reflection on the session objectives.',
           coachingPoints: [
             'Use controlled breathing during recovery.',
             'Complete each mobility movement deliberately.',
             'Identify one thing the team performed well.',
             'Identify one thing the team must improve.',
           ],
-          equipment: [
-            'Soccer balls',
-          ],
+          equipment: ['Soccer balls'],
         ),
       ],
     );
   }
 
-  Widget _buildSessionHeader({
-    required ThemeData theme,
-    required PracticeController controller,
-  }) {
+  Widget _buildCompactSessionHeader(
+    ThemeData theme,
+    PracticeController controller,
+  ) {
     final session = controller.session;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant,
-        ),
-      ),
-      child: Column(
-        children: [
-          _buildStatusBadge(controller),
-          const SizedBox(height: 22),
-          Text(
-            '00:00:00',
-            style: theme.textTheme.displayMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              letterSpacing: 2,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'SESSION TIMER',
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              letterSpacing: 1.4,
-            ),
-          ),
-          const SizedBox(height: 22),
-          Text(
-            session.title,
-            style: theme.textTheme.titleLarge,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            '${_formatDate(session.date)} • '
-            '${_formatTime(session.date)} • '
-            '${session.totalDurationMinutes} Minutes',
-            style: theme.textTheme.bodyMedium,
-            textAlign: TextAlign.center,
-          ),
-          if (session.location.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Text(
-              session.location,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+    return _Panel(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final wide = constraints.maxWidth >= 680;
+
+          final sessionInfo = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildStatusBadge(controller),
+              const SizedBox(height: 12),
+              Text(
+                session.title,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ],
+              const SizedBox(height: 6),
+              Text(
+                '${_formatDate(session.date)} • ${_formatTime(session.date)} • ${session.totalDurationMinutes} Minutes',
+                style: theme.textTheme.bodyMedium,
+              ),
+              if (session.location.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.location_on_outlined,
+                      size: 16,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 5),
+                    Flexible(
+                      child: Text(
+                        session.location,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          );
+
+          final timer = Column(
+            crossAxisAlignment:
+                wide ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            children: [
+              Text(
+                _formatClock(controller.sessionElapsed),
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.6,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'SESSION TIMER',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ],
+          );
+
+          if (wide) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: sessionInfo),
+                const SizedBox(width: 28),
+                timer,
+              ],
+            );
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              sessionInfo,
+              const SizedBox(height: 18),
+              timer,
+            ],
+          );
+        },
       ),
     );
   }
@@ -287,32 +278,24 @@ class _PracticeScreenState extends State<PracticeScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: color.withValues(alpha: 0.5),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 12,
-            color: color,
-          ),
-          const SizedBox(width: 8),
+          Icon(icon, size: 11, color: color),
+          const SizedBox(width: 7),
           Text(
             label,
             style: TextStyle(
               color: color,
               fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
+              letterSpacing: 1.1,
+              fontSize: 12,
             ),
           ),
         ],
@@ -320,163 +303,281 @@ class _PracticeScreenState extends State<PracticeScreen> {
     );
   }
 
-  Widget _buildProgressCard({
-    required ThemeData theme,
-    required PracticeController controller,
-  }) {
+  Widget _buildDualProgressCard(
+    ThemeData theme,
+    PracticeController controller,
+  ) {
     final totalBlocks = controller.session.blockCount;
     final displayedBlockNumber = controller.isPracticeComplete
         ? totalBlocks
         : controller.currentBlockIndex + 1;
 
     return _DashboardCard(
-      eyebrow: 'PRACTICE PROGRESS',
-      icon: Icons.trending_up,
+      eyebrow: 'SESSION CONTROL',
+      icon: Icons.monitor_heart_outlined,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  controller.isPracticeComplete
-                      ? 'All blocks completed'
-                      : 'Block $displayedBlockNumber of $totalBlocks',
-                  style: theme.textTheme.titleMedium,
-                ),
-              ),
-              Text(
-                '${(controller.progress * 100).round()}%',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          LinearProgressIndicator(
+          _ProgressSection(
+            label: 'Overall Practice',
+            supportingText: controller.isPracticeComplete
+                ? 'All blocks completed'
+                : 'Block $displayedBlockNumber of $totalBlocks',
             value: controller.progress,
-            minHeight: 10,
-            borderRadius: BorderRadius.circular(999),
+            valueLabel: '${(controller.progress * 100).round()}%',
+            color: theme.colorScheme.primary,
           ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '${controller.completedBlockCount} completed',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              Text(
-                '${controller.remainingBlockCount} remaining',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
+          if (!controller.isPracticeComplete &&
+              controller.currentBlock != null) ...[
+            const SizedBox(height: 22),
+            _ProgressSection(
+              label: 'Current Block',
+              supportingText: controller.currentBlock!.title,
+              value: controller.currentBlockProgress,
+              valueLabel:
+                  '${(controller.currentBlockProgress * 100).round()}%',
+              color: Colors.green,
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildCurrentBlockCard({
-    required ThemeData theme,
-    required PracticeController controller,
-    required PracticeBlock block,
-  }) {
+  Widget _buildCurrentBlockMissionControl(
+    ThemeData theme,
+    PracticeController controller,
+    PracticeBlock block,
+  ) {
+    final remaining = controller.blockTimeRemaining;
+    final isLowTime = controller.isPracticeStarted &&
+        !controller.isPracticePaused &&
+        remaining.inSeconds > 0 &&
+        remaining.inSeconds <= 120;
+    final countdownColor =
+        isLowTime ? theme.colorScheme.error : theme.colorScheme.onSurface;
+
     return _DashboardCard(
       eyebrow: 'CURRENT BLOCK',
-      icon: Icons.play_circle_outline,
+      icon: Icons.sports_soccer,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            block.category,
-            style: theme.textTheme.headlineSmall,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final wide = constraints.maxWidth >= 680;
+
+              final details = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    block.category.toUpperCase(),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                      letterSpacing: 1.1,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    block.title,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    block.description,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      height: 1.45,
+                    ),
+                  ),
+                ],
+              );
+
+              final timer = Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                decoration: BoxDecoration(
+                  color: isLowTime
+                      ? theme.colorScheme.error.withValues(alpha: 0.10)
+                      : theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isLowTime
+                        ? theme.colorScheme.error.withValues(alpha: 0.35)
+                        : theme.colorScheme.outlineVariant,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment:
+                      wide ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _formatCountdown(remaining),
+                      style: theme.textTheme.displaySmall?.copyWith(
+                        color: countdownColor,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.4,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'TIME REMAINING',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: isLowTime
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.onSurfaceVariant,
+                        letterSpacing: 1.1,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${block.durationMinutes} minute block',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+
+              if (wide) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: details),
+                    const SizedBox(width: 24),
+                    timer,
+                  ],
+                );
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [details, const SizedBox(height: 18), timer],
+              );
+            },
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 22),
+          _CoachFocusPanel(coachingPoints: block.coachingPoints),
+          const SizedBox(height: 20),
           Text(
-            block.title,
-            style: theme.textTheme.titleMedium?.copyWith(
+            'EQUIPMENT',
+            style: theme.textTheme.labelMedium?.copyWith(
               color: theme.colorScheme.primary,
+              letterSpacing: 1,
+              fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 12),
-          Text(
-            block.description,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 18),
-          _InformationRow(
-            icon: Icons.schedule,
-            label: 'Block Duration',
-            value: '${block.durationMinutes} Minutes',
-          ),
-          const SizedBox(height: 12),
-          _InformationRow(
-            icon: Icons.timer_outlined,
-            label: 'Time Remaining',
-            value: _formatDuration(block.durationMinutes),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: block.equipment
+                .map(
+                  (item) => _EquipmentChip(
+                    label: item,
+                    icon: _equipmentIcon(item),
+                  ),
+                )
+                .toList(),
           ),
           const SizedBox(height: 20),
-          SizedBox(
+          Container(
             width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: controller.isPracticeStarted
-                  ? null
-                  : controller.startPractice,
-              icon: const Icon(Icons.play_arrow),
-              label: Text(
-                controller.isPracticeStarted
-                    ? 'BLOCK ACTIVE'
-                    : 'START PRACTICE',
-              ),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(14),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNextBlockCard({
-    required ThemeData theme,
-    required PracticeBlock block,
-  }) {
-    return _DashboardCard(
-      eyebrow: 'NEXT BLOCK',
-      icon: Icons.skip_next_outlined,
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  block.title,
-                  style: theme.textTheme.titleLarge,
+                Icon(
+                  _timerStatusIcon(controller),
+                  size: 19,
+                  color: isLowTime
+                      ? theme.colorScheme.error
+                      : theme.colorScheme.onSurfaceVariant,
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  block.category,
-                  style: theme.textTheme.bodyMedium,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _blockTimerMessage(controller),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: isLowTime
+                          ? theme.colorScheme.error
+                          : theme.colorScheme.onSurfaceVariant,
+                      fontWeight: isLowTime ? FontWeight.w700 : null,
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 20),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 10,
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => _openCoachMode(context),
+              icon: Icon(
+                controller.isPracticeStarted
+                    ? Icons.fullscreen
+                    : Icons.play_arrow,
+              ),
+              label: Text(
+                controller.isPracticeStarted
+                    ? 'RETURN TO COACH MODE'
+                    : 'BEGIN PRACTICE',
+              ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openCoachMode(BuildContext context) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => CoachModeScreen(
+          controller: _controller,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNextBlockCard(ThemeData theme, PracticeBlock block) {
+    return _DashboardCard(
+      eyebrow: 'NEXT BLOCK',
+      icon: Icons.skip_next_outlined,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 520;
+          final details = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                block.title,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                block.category,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          );
+          final duration = Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: theme.colorScheme.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
@@ -488,36 +589,60 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-          ),
-        ],
+          );
+
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [details, const SizedBox(height: 14), duration],
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(child: details),
+              const SizedBox(width: 20),
+              duration,
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildPracticeCompleteCard({
-    required ThemeData theme,
-    required PracticeController controller,
-  }) {
+  Widget _buildPracticeCompleteCard(
+    ThemeData theme,
+    PracticeController controller,
+  ) {
     return _DashboardCard(
       eyebrow: 'PRACTICE COMPLETE',
       icon: Icons.emoji_events_outlined,
       child: Column(
         children: [
-          Icon(
-            Icons.check_circle_outline,
-            size: 64,
-            color: theme.colorScheme.primary,
+          Container(
+            width: 78,
+            height: 78,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: theme.colorScheme.primary.withValues(alpha: 0.14),
+            ),
+            child: Icon(
+              Icons.check_circle_outline,
+              size: 48,
+              color: theme.colorScheme.primary,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           Text(
             'Training Session Completed',
-            style: theme.textTheme.headlineSmall,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
-            '${controller.session.blockCount} blocks completed across '
-            '${controller.session.totalDurationMinutes} planned minutes.',
+            '${controller.session.blockCount} blocks completed in ${_formatClock(controller.sessionElapsed)}.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -537,10 +662,10 @@ class _PracticeScreenState extends State<PracticeScreen> {
     );
   }
 
-  Widget _buildSessionOverviewCard({
-    required ThemeData theme,
-    required PracticeSession session,
-  }) {
+  Widget _buildSessionOverviewCard(
+    ThemeData theme,
+    PracticeSession session,
+  ) {
     return _DashboardCard(
       eyebrow: 'SESSION OVERVIEW',
       icon: Icons.assignment_outlined,
@@ -600,7 +725,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final useTwoColumns = constraints.maxWidth >= 620;
-
           const leftColumn = Column(
             children: [
               _InformationRow(
@@ -622,7 +746,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
               ),
             ],
           );
-
           const rightColumn = Column(
             children: [
               _InformationRow(
@@ -668,17 +791,17 @@ class _PracticeScreenState extends State<PracticeScreen> {
     );
   }
 
-  Widget _buildActionButtons({
-    required BuildContext context,
-    required PracticeController controller,
-  }) {
+  Widget _buildActionButtons(
+    BuildContext context,
+    PracticeController controller,
+  ) {
     if (controller.isPracticeComplete) {
-      return TextButton.icon(
-        onPressed: () {
-          Navigator.of(context).pop();
-        },
-        icon: const Icon(Icons.arrow_back),
-        label: const Text('RETURN TO MISSION CONTROL'),
+      return Center(
+        child: TextButton.icon(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back),
+          label: const Text('RETURN TO MISSION CONTROL'),
+        ),
       );
     }
 
@@ -691,9 +814,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 ? controller.moveToNextBlock
                 : null,
             icon: Icon(
-              controller.nextBlock == null
-                  ? Icons.check
-                  : Icons.skip_next,
+              controller.nextBlock == null ? Icons.check : Icons.skip_next,
             ),
             label: Text(
               controller.nextBlock == null
@@ -710,9 +831,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 ? controller.togglePause
                 : null,
             icon: Icon(
-              controller.isPracticePaused
-                  ? Icons.play_arrow
-                  : Icons.pause,
+              controller.isPracticePaused ? Icons.play_arrow : Icons.pause,
             ),
             label: Text(
               controller.isPracticePaused
@@ -734,14 +853,48 @@ class _PracticeScreenState extends State<PracticeScreen> {
         ),
         const SizedBox(height: 8),
         TextButton.icon(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
+          onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back),
           label: const Text('RETURN TO MISSION CONTROL'),
         ),
       ],
     );
+  }
+
+  IconData _equipmentIcon(String item) {
+    final normalized = item.toLowerCase();
+    if (normalized.contains('ball')) return Icons.sports_soccer;
+    if (normalized.contains('cone')) return Icons.change_history;
+    if (normalized.contains('goal')) return Icons.sports_outlined;
+    if (normalized.contains('pinnie') || normalized.contains('bib')) {
+      return Icons.checkroom_outlined;
+    }
+    return Icons.inventory_2_outlined;
+  }
+
+  IconData _timerStatusIcon(PracticeController controller) {
+    if (!controller.isPracticeStarted) return Icons.info_outline;
+    if (controller.isPracticePaused) return Icons.pause_circle_outline;
+    if (controller.blockTimeRemaining.inSeconds <= 0) {
+      return Icons.alarm_on_outlined;
+    }
+    return Icons.timer_outlined;
+  }
+
+  String _blockTimerMessage(PracticeController controller) {
+    if (!controller.isPracticeStarted) {
+      return 'The block timer will begin when practice starts.';
+    }
+    if (controller.isPracticePaused) {
+      return 'Timer paused. Resume when the team is ready.';
+    }
+    if (controller.blockTimeRemaining.inSeconds <= 0) {
+      return 'Block time has expired. Advance when ready.';
+    }
+    if (controller.blockTimeRemaining.inSeconds <= 120) {
+      return 'Less than two minutes remain in this block.';
+    }
+    return 'Block timer is running.';
   }
 
   String _formatDate(DateTime date) {
@@ -754,7 +907,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
       'Saturday',
       'Sunday',
     ];
-
     const months = [
       'January',
       'February',
@@ -769,22 +921,58 @@ class _PracticeScreenState extends State<PracticeScreen> {
       'November',
       'December',
     ];
-
-    return '${weekdays[date.weekday - 1]}, '
-        '${months[date.month - 1]} ${date.day}';
+    return '${weekdays[date.weekday - 1]}, ${months[date.month - 1]} ${date.day}';
   }
 
   String _formatTime(DateTime date) {
     final hour = date.hour % 12 == 0 ? 12 : date.hour % 12;
     final minute = date.minute.toString().padLeft(2, '0');
     final period = date.hour >= 12 ? 'PM' : 'AM';
-
     return '$hour:$minute $period';
   }
 
-  String _formatDuration(int durationMinutes) {
-    final minutes = durationMinutes.toString().padLeft(2, '0');
-    return '$minutes:00';
+  String _formatClock(Duration duration) {
+    final hours = duration.inHours.toString().padLeft(2, '0');
+    final minutes =
+        duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds =
+        duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$hours:$minutes:$seconds';
+  }
+
+  String _formatCountdown(Duration duration) {
+    final safeDuration = duration.isNegative ? Duration.zero : duration;
+    final hours = safeDuration.inHours;
+    final minutes =
+        safeDuration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds =
+        safeDuration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    if (hours > 0) {
+      return '${hours.toString().padLeft(2, '0')}:$minutes:$seconds';
+    }
+    final totalMinutes = safeDuration.inMinutes.toString().padLeft(2, '0');
+    return '$totalMinutes:$seconds';
+  }
+}
+
+class _Panel extends StatelessWidget {
+  const _Panel({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: child,
+    );
   }
 }
 
@@ -802,27 +990,20 @@ class _DashboardCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant,
-        ),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                icon,
-                size: 20,
-                color: theme.colorScheme.primary,
-              ),
+              Icon(icon, size: 20, color: theme.colorScheme.primary),
               const SizedBox(width: 9),
               Text(
                 eyebrow,
@@ -836,6 +1017,175 @@ class _DashboardCard extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           child,
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressSection extends StatelessWidget {
+  const _ProgressSection({
+    required this.label,
+    required this.supportingText,
+    required this.value,
+    required this.valueLabel,
+    required this.color,
+  });
+
+  final String label;
+  final String supportingText;
+  final double value;
+  final String valueLabel;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    supportingText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            Text(
+              valueLabel,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        LinearProgressIndicator(
+          value: value,
+          minHeight: 10,
+          borderRadius: BorderRadius.circular(999),
+          color: color,
+          backgroundColor: color.withValues(alpha: 0.16),
+        ),
+      ],
+    );
+  }
+}
+
+class _CoachFocusPanel extends StatelessWidget {
+  const _CoachFocusPanel({required this.coachingPoints});
+
+  final List<String> coachingPoints;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.20),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.visibility_outlined,
+                size: 20,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 9),
+              Text(
+                'COACHING FOCUS',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.primary,
+                  letterSpacing: 1,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ...coachingPoints.map(
+            (point) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.check_circle_outline,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      point,
+                      style: theme.textTheme.bodyMedium?.copyWith(height: 1.35),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EquipmentChip extends StatelessWidget {
+  const _EquipmentChip({required this.label, required this.icon});
+
+  final String label;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 17, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 7),
+          Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );
@@ -856,21 +1206,11 @@ class _InformationRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 20,
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
+        Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
         const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            label,
-            style: theme.textTheme.bodyMedium,
-          ),
-        ),
+        Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
         const SizedBox(width: 12),
         Flexible(
           child: Text(
