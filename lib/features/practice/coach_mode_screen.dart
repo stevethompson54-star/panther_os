@@ -50,6 +50,9 @@ class _CoachModeScreenState extends State<CoachModeScreen> {
                     controller: _controller,
                     onExit: () => Navigator.of(context).pop(),
                   ),
+                  const SizedBox(height: 12),
+                  if (!_controller.isPracticeComplete)
+                    _PracticeTimeline(controller: _controller),
                   const SizedBox(height: 14),
                   Expanded(
                     child: _controller.isPracticeComplete
@@ -222,6 +225,151 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
+
+class _PracticeTimeline extends StatelessWidget {
+  const _PracticeTimeline({
+    required this.controller,
+  });
+
+  final PracticeController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final blocks = controller.session.blocks;
+
+    if (blocks.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 12,
+      ),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant,
+        ),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: List.generate(blocks.length, (index) {
+            final isCompleted = index < controller.currentBlockIndex;
+            final isCurrent = index == controller.currentBlockIndex;
+            final isLast = index == blocks.length - 1;
+            final block = blocks[index];
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 106,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () => controller.jumpToBlock(index),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 2,
+                      ),
+                      child: Column(
+                        children: [
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            width: isCurrent ? 34 : 28,
+                            height: isCurrent ? 34 : 28,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isCompleted || isCurrent
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.surface,
+                              border: Border.all(
+                                width: isCurrent ? 3 : 2,
+                                color: isCurrent
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.outline,
+                              ),
+                              boxShadow: isCurrent
+                                  ? [
+                                      BoxShadow(
+                                        color: theme.colorScheme.primary
+                                            .withValues(alpha: 0.28),
+                                        blurRadius: 10,
+                                        spreadRadius: 2,
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: Center(
+                              child: isCompleted
+                                  ? Icon(
+                                      Icons.check,
+                                      size: 17,
+                                      color: theme.colorScheme.onPrimary,
+                                    )
+                                  : Text(
+                                      '${index + 1}',
+                                      style: theme.textTheme.labelMedium
+                                          ?.copyWith(
+                                        color: isCurrent
+                                            ? theme.colorScheme.onPrimary
+                                            : theme.colorScheme
+                                                .onSurfaceVariant,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(height: 7),
+                          Text(
+                            block.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: isCurrent
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurfaceVariant,
+                              fontWeight:
+                                  isCurrent ? FontWeight.w900 : FontWeight.w700,
+                              height: 1.15,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                if (!isLast)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 15),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      width: 28,
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: index < controller.currentBlockIndex
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.outlineVariant,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          }),
+        ),
+      ),
+    );
+  }
+}
+
 class _CurrentBlockPanel extends StatelessWidget {
   const _CurrentBlockPanel({
     required this.controller,
@@ -290,12 +438,12 @@ class _CurrentBlockPanel extends StatelessWidget {
           SizedBox(height: compact ? 12 : 18),
           Text(
             _formatCountdown(remaining),
-            style: (compact
-                    ? theme.textTheme.displaySmall
-                    : theme.textTheme.displayMedium)
-                ?.copyWith(
-              color: timerColor,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: compact ? 72 : 96,
               fontWeight: FontWeight.w900,
+              color: timerColor,
+              height: 1.0,
               letterSpacing: 2,
               fontFeatures: const [
                 FontFeature.tabularFigures(),
